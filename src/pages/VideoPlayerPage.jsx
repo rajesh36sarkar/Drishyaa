@@ -1,24 +1,48 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { usePlaylist } from '../context/PlaylistContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaThumbsUp, FaThumbsDown, FaUser, FaEdit, FaTrash } from 'react-icons/fa';
+import { 
+  FaThumbsUp, FaThumbsDown, FaUser, FaEdit, FaTrash, 
+  FaClock, FaList, FaShare, FaCog, FaExpand, FaCompress,
+  FaDownload, FaFlag, FaSave, FaHeart
+} from 'react-icons/fa';
+import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
 
 const VideoPlayerPage = () => {
   const { id } = useParams();
+  const videoRef = useRef(null);
   const [video, setVideo] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [editingComment, setEditingComment] = useState(null);
-  const { user } = useAuth();
+  const [recommendations, setRecommendations] = useState([]);
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [speed, setSpeed] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
+  
+  const { user } = useAuth();
+  const { addToWatchLater, playlists, addToPlaylist, addToWatchHistory } = usePlaylist();
+
+  useKeyboardShortcuts(videoRef, () => document.getElementById('search-input')?.focus());
 
   useEffect(() => {
     fetchVideo();
     fetchComments();
+    fetchRecommendations();
   }, [id]);
+
+  useEffect(() => {
+    if (video && video._id) {
+      addToWatchHistory(video);
+    }
+  }, [video]);
 
   const fetchVideo = async () => {
     try {
@@ -39,12 +63,23 @@ const VideoPlayerPage = () => {
     }
   };
 
+  const fetchRecommendations = async () => {
+    try {
+      const res = await axios.get('/videos');
+      const otherVideos = res.data.filter(v => v._id !== id).slice(0, 10);
+      setRecommendations(otherVideos);
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+    }
+  };
+
   const handleLike = async () => {
     if (!user) return;
     try {
       await axios.patch(`/videos/${id}/like`);
       setVideo({ ...video, likes: video.likes + 1 });
       setLiked(true);
+      if (disliked) setDisliked(false);
     } catch (error) {
       console.error('Error liking video:', error);
     }
@@ -56,6 +91,7 @@ const VideoPlayerPage = () => {
       await axios.patch(`/videos/${id}/dislike`);
       setVideo({ ...video, dislikes: video.dislikes + 1 });
       setDisliked(true);
+      if (liked) setLiked(false);
     } catch (error) {
       console.error('Error disliking video:', error);
     }
@@ -92,6 +128,34 @@ const VideoPlayerPage = () => {
     }
   };
 
+  const changeSpeed = (newSpeed) => {
+    setSpeed(newSpeed);
+    if (videoRef.current) {
+      videoRef.current.playbackRate = newSpeed;
+    }
+    setShowSettings(false);
+  };
+
+  const toggleFullscreen = () => {
+    if (!videoRef.current) return;
+    if (!isFullscreen) {
+      videoRef.current.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  const shareVideo = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url);
+    alert('Video link copied to clipboard!');
+    setShowShareMenu(false);
+  };
+
+  const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
+  
   const formatViews = (views) => {
     if (views >= 1000000) return (views / 1000000).toFixed(1) + 'M';
     if (views >= 1000) return (views / 1000).toFixed(1) + 'K';
@@ -109,14 +173,49 @@ const VideoPlayerPage = () => {
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex-1">
           {/* Video Player */}
-          <div className="aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl">
+          <div className="relative aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl">
             <video 
+              ref={videoRef}
               src={video.videoUrl} 
               controls 
               className="w-full h-full" 
               poster={video.thumbnailUrl}
               controlsList="nodownload"
             />
+            
+            {/* Video Controls Overlay */}
+            <div className="absolute bottom-4 right-4 flex gap-2 z-20">
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className="p-2 bg-black/50 rounded-full hover:bg-black/70 transition"
+              >
+                <FaCog className="text-white" />
+              </button>
+              <button
+                onClick={toggleFullscreen}
+                className="p-2 bg-black/50 rounded-full hover:bg-black/70 transition"
+              >
+                {isFullscreen ? <FaCompress className="text-white" /> : <FaExpand className="text-white" />}
+              </button>
+            </div>
+            
+            {/* Speed Settings */}
+            {showSettings && (
+              <div className="absolute bottom-20 right-4 bg-black/90 rounded-lg p-3 min-w-40 z-20">
+                <p className="text-xs text-gray-400 mb-2">Playback Speed</p>
+                <div className="flex flex-wrap gap-2">
+                  {speeds.map(s => (
+                    <button
+                      key={s}
+                      onClick={() => changeSpeed(s)}
+                      className={`px-2 py-1 text-sm rounded ${speed === s ? 'bg-purple-600' : 'bg-gray-700'}`}
+                    >
+                      {s}x
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           
           {/* Video Title */}
@@ -134,11 +233,11 @@ const VideoPlayerPage = () => {
                 {formatViews(video.views)} views • {new Date(video.uploadDate).toLocaleDateString()}
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <motion.button 
                 whileTap={{ scale: 0.95 }} 
                 onClick={handleLike} 
-                className={`flex items-center gap-2 px-5 py-2 rounded-full transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
                   liked 
                     ? 'bg-blue-500 text-white' 
                     : 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'
@@ -149,7 +248,7 @@ const VideoPlayerPage = () => {
               <motion.button 
                 whileTap={{ scale: 0.95 }} 
                 onClick={handleDislike} 
-                className={`flex items-center gap-2 px-5 py-2 rounded-full transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
                   disliked 
                     ? 'bg-red-500 text-white' 
                     : 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'
@@ -157,6 +256,65 @@ const VideoPlayerPage = () => {
               >
                 <FaThumbsDown /> {formatViews(video.dislikes)}
               </motion.button>
+              
+              {/* Watch Later Button */}
+              <motion.button 
+                whileTap={{ scale: 0.95 }} 
+                onClick={() => addToWatchLater(video)}
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 transition-all"
+              >
+                <FaClock /> Watch Later
+              </motion.button>
+              
+              {/* Save to Playlist */}
+              <div className="relative">
+                <motion.button 
+                  whileTap={{ scale: 0.95 }} 
+                  onClick={() => setShowPlaylistMenu(!showPlaylistMenu)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 transition-all"
+                >
+                  <FaList /> Save
+                </motion.button>
+                
+                {showPlaylistMenu && playlists.length > 0 && (
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-2 z-10">
+                    {playlists.map(playlist => (
+                      <button
+                        key={playlist.id}
+                        onClick={() => {
+                          addToPlaylist(playlist.id, video);
+                          setShowPlaylistMenu(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-sm"
+                      >
+                        {playlist.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {/* Share Button */}
+              <div className="relative">
+                <motion.button 
+                  whileTap={{ scale: 0.95 }} 
+                  onClick={() => setShowShareMenu(!showShareMenu)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 transition-all"
+                >
+                  <FaShare /> Share
+                </motion.button>
+                
+                {showShareMenu && (
+                  <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-2 z-10">
+                    <button onClick={shareVideo} className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-sm">
+                      Copy Link
+                    </button>
+                    <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-sm">
+                      Share to Twitter
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           
@@ -258,6 +416,29 @@ const VideoPlayerPage = () => {
                 No comments yet. Be the first to comment!
               </p>
             )}
+          </div>
+        </div>
+        
+        {/* Recommendations Sidebar */}
+        <div className="lg:w-96">
+          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Recommended</h3>
+          <div className="space-y-4">
+            {recommendations.map(rec => (
+              <Link to={`/video/${rec._id}`} key={rec._id} className="flex gap-3 group">
+                <img 
+                  src={rec.thumbnailUrl} 
+                  className="w-40 h-24 object-cover rounded-lg" 
+                  alt={rec.title} 
+                />
+                <div className="flex-1">
+                  <h4 className="font-medium text-sm group-hover:text-purple-600 line-clamp-2 text-gray-900 dark:text-white">
+                    {rec.title}
+                  </h4>
+                  <p className="text-xs text-gray-500 mt-1">{rec.channel?.channelName}</p>
+                  <p className="text-xs text-gray-400">{formatViews(rec.views)} views</p>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </div>

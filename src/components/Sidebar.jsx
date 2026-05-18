@@ -3,7 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FaHome, FaFire, FaSubscript, FaVideo, FaHistory, FaThumbsUp,
-  FaMusic, FaGamepad, FaCode, FaLaugh, FaFutbol, FaPlayCircle
+  FaMusic, FaGamepad, FaCode, FaLaugh, FaFutbol, FaPlayCircle,
+  FaClock, FaList, FaRegClock
 } from 'react-icons/fa';
 
 const Sidebar = ({ isOpen }) => {
@@ -15,6 +16,8 @@ const Sidebar = ({ isOpen }) => {
     { icon: <FaSubscript />, label: 'Subscriptions', path: '/subscriptions' },
     { icon: <FaVideo />, label: 'Your Videos', path: '/channel' },
     { icon: <FaHistory />, label: 'History', path: '/history' },
+    { icon: <FaRegClock />, label: 'Watch Later', path: '/watch-later' },
+    { icon: <FaList />, label: 'Playlists', path: '/playlists' },
     { icon: <FaThumbsUp />, label: 'Liked Videos', path: '/liked' },
   ];
 
@@ -27,9 +30,7 @@ const Sidebar = ({ isOpen }) => {
     { icon: <FaFutbol />, label: 'Sports', category: 'Sports' },
   ];
 
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
+  const isActive = (path) => location.pathname === path;
 
   return (
     <AnimatePresence>
@@ -42,7 +43,6 @@ const Sidebar = ({ isOpen }) => {
           className="sidebar fixed left-0 top-[60px] bottom-0 w-64 overflow-y-auto z-40"
         >
           <div className="py-4">
-            {/* Main Menu */}
             <div className="px-3 mb-4">
               {menuItems.map((item, index) => (
                 <Link
@@ -56,10 +56,8 @@ const Sidebar = ({ isOpen }) => {
               ))}
             </div>
 
-            {/* Divider */}
             <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent my-4" />
 
-            {/* Categories */}
             <div className="px-3">
               <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-3 mb-3">
                 EXPLORE
@@ -76,7 +74,6 @@ const Sidebar = ({ isOpen }) => {
               ))}
             </div>
 
-            {/* Footer */}
             <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-800">
               <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
                 <p>© 2024 Drishya</p>
