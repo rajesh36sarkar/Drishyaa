@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 const PremiumBackground = () => {
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden bg-[var(--bg-primary)] pointer-events-none select-none">
-      {/* Dynamic Floating Gradient Ambient Orbs */}
+      
+      {/* Dynamic floating gradient ambient background shapes */}
       <motion.div
         className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-purple-600/10 dark:bg-purple-600/15 rounded-full filter blur-[120px]"
         animate={{
@@ -14,7 +15,7 @@ const PremiumBackground = () => {
         transition={{
           duration: 18,
           repeat: Infinity,
-          ease: "linear"
+          ease: 'linear'
         }}
       />
       <motion.div
@@ -26,10 +27,11 @@ const PremiumBackground = () => {
         transition={{
           duration: 22,
           repeat: Infinity,
-          ease: "linear"
+          ease: 'linear'
         }}
       />
       
+      {/* Subtle pixel tech-grid pattern overlay */}
       <div 
         className="absolute inset-0 opacity-[0.015] dark:opacity-[0.03]"
         style={{
@@ -37,6 +39,7 @@ const PremiumBackground = () => {
           backgroundRepeat: 'repeat',
         }}
       />
+      
     </div>
   );
 };

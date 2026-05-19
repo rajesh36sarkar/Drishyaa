@@ -4,12 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FaHome, FaFire, FaSubscript, FaVideo, FaHistory, FaThumbsUp,
   FaMusic, FaGamepad, FaCode, FaLaugh, FaFutbol, FaPlayCircle,
-  FaClock, FaList, FaRegClock
+  FaList, FaRegClock
 } from 'react-icons/fa';
 
 const Sidebar = ({ isOpen }) => {
   const location = useLocation();
   
+  // Main core navigation pages configuration array
   const menuItems = [
     { icon: <FaHome />, label: 'Home', path: '/' },
     { icon: <FaFire />, label: 'Trending', path: '/trending' },
@@ -21,6 +22,7 @@ const Sidebar = ({ isOpen }) => {
     { icon: <FaThumbsUp />, label: 'Liked Videos', path: '/liked' },
   ];
 
+  // Video categorization exploration filters matching project requirements
   const categories = [
     { icon: <FaPlayCircle />, label: 'All', category: 'All' },
     { icon: <FaMusic />, label: 'Music', category: 'Music' },
@@ -30,6 +32,7 @@ const Sidebar = ({ isOpen }) => {
     { icon: <FaFutbol />, label: 'Sports', category: 'Sports' },
   ];
 
+  // Simple active helper route check
   const isActive = (path) => location.pathname === path;
 
   return (
@@ -39,45 +42,60 @@ const Sidebar = ({ isOpen }) => {
           initial={{ x: -280 }}
           animate={{ x: 0 }}
           exit={{ x: -280 }}
-          transition={{ type: 'spring', damping: 25 }}
-          className="sidebar fixed left-0 top-[60px] bottom-0 w-64 overflow-y-auto z-40"
+          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          className="sidebar fixed left-0 top-[70px] bottom-0 w-64 overflow-y-auto z-40 border-r border-gray-200 dark:border-zinc-800"
         >
-          <div className="py-4">
-            <div className="px-3 mb-4">
-              {menuItems.map((item, index) => (
-                <Link
-                  key={index}
-                  to={item.path}
-                  className={`sidebar-item ${isActive(item.path) ? 'active' : ''}`}
-                >
-                  <span className="text-xl">{item.icon}</span>
-                  <span className="font-medium">{item.label}</span>
-                </Link>
-              ))}
+          <div className="py-4 flex flex-col justify-between h-full">
+            <div>
+              {/* Primary Application Route Navigation Links List */}
+              <div className="px-3 mb-4 space-y-1">
+                {menuItems.map((item, index) => {
+                  const active = isActive(item.path);
+                  return (
+                    <Link
+                      key={index}
+                      to={item.path}
+                      className={`sidebar-item flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-sm transition-colors ${
+                        active 
+                          ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold' 
+                          : 'text-[var(--text-secondary)] hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)]'
+                      }`}
+                    >
+                      <span className={`text-lg ${active ? 'text-purple-500' : ''}`}>{item.icon}</span>
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {/* Decorative clean section separation line wrapper */}
+              <div className="h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-zinc-800 to-transparent my-4" />
+
+              {/* Explore Category Filters Menu List Blocks */}
+              <div className="px-3">
+                <h3 className="text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest px-4 mb-3">
+                  Explore
+                </h3>
+                <div className="space-y-1">
+                  {categories.map((item, index) => (
+                    <Link
+                      key={index}
+                      to={`/?category=${item.category}`}
+                      className="sidebar-item flex items-center gap-4 px-4 py-2.5 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)] transition-colors group"
+                    >
+                      <span className="text-base text-gray-400 group-hover:text-pink-500 transition-colors">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent my-4" />
-
-            <div className="px-3">
-              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-3 mb-3">
-                EXPLORE
-              </h3>
-              {categories.map((item, index) => (
-                <Link
-                  key={index}
-                  to={`/?category=${item.category}`}
-                  className="sidebar-item"
-                >
-                  <span className="text-lg">{item.icon}</span>
-                  <span>{item.label}</span>
-                </Link>
-              ))}
-            </div>
-
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-800">
-              <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                <p>© 2024 Drishya</p>
-                <p className="mt-1">Premium Video Platform</p>
+            {/* Sticky Minimalist Footer Branding Credit Tag */}
+            <div className="p-4 mt-auto border-t border-gray-100 dark:border-zinc-900 text-center">
+              <div className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 space-y-0.5">
+                <p>© 2026 Drishyaa TV</p>
+                <p>Premium Video Platform</p>
               </div>
             </div>
           </div>

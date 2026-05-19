@@ -12,6 +12,7 @@ const VideoControls = ({ videoRef }) => {
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
   const qualities = ['Auto', '1080p', '720p', '480p'];
 
+  // Handle clicking outside the menu panel to drop settings view state
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -24,15 +25,20 @@ const VideoControls = ({ videoRef }) => {
 
   const changeSpeed = (newSpeed) => {
     setSpeed(newSpeed);
-    if (videoRef.current) videoRef.current.playbackRate = newSpeed;
+    if (videoRef.current) {
+      videoRef.current.playbackRate = newSpeed;
+    }
   };
 
   const toggleFullscreen = () => {
     if (!videoRef.current) return;
+    
     if (!isFullscreen) {
-      videoRef.current.requestFullscreen?.() || videoRef.current.webkitRequestFullscreen?.();
+      if (videoRef.current.requestFullscreen) videoRef.current.requestFullscreen();
+      else if (videoRef.current.webkitRequestFullscreen) videoRef.current.webkitRequestFullscreen();
     } else {
-      document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
     }
     setIsFullscreen(!isFullscreen);
   };
@@ -43,7 +49,6 @@ const VideoControls = ({ videoRef }) => {
         <button
           onClick={() => setShowSettings(!showSettings)}
           className="p-3 bg-black/60 backdrop-blur-md text-white rounded-xl hover:bg-black/80 transition-all duration-200 active:scale-90 shadow-lg border border-white/5"
-          aria-label="Video player streaming settings panel switch"
         >
           <FaCog className={`text-sm ${showSettings ? 'animate-spin' : ''}`} />
         </button>
@@ -57,15 +62,20 @@ const VideoControls = ({ videoRef }) => {
               transition={{ duration: 0.15 }}
               className="absolute bottom-full right-0 mb-3 bg-zinc-950/95 backdrop-blur-md border border-zinc-800 rounded-2xl p-4 min-w-[220px] shadow-2xl space-y-4 text-white"
             >
+              {/* Playback rate speed selector block */}
               <div>
-                <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 mb-2 flex items-center gap-1.5"><FaSlidersH /> Playback Speed</p>
+                <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 mb-2 flex items-center gap-1.5">
+                  <FaSlidersH /> Playback Speed
+                </p>
                 <div className="grid grid-cols-3 gap-1">
-                  {speeds.map(s => (
+                  {speeds.map((s) => (
                     <button
                       key={s}
                       onClick={() => changeSpeed(s)}
-                      className={`py-1.5 rounded-lg text-[11px] font-bold transition-all relative ${
-                        speed === s ? 'bg-purple-600 text-white shadow-md shadow-purple-600/10' : 'bg-zinc-900 text-zinc-400 hover:text-white'
+                      className={`py-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                        speed === s 
+                          ? 'bg-purple-600 text-white shadow-md' 
+                          : 'bg-zinc-900 text-zinc-400 hover:text-white'
                       }`}
                     >
                       {s}x
@@ -76,10 +86,13 @@ const VideoControls = ({ videoRef }) => {
 
               <div className="h-px bg-zinc-900" />
 
+              {/* Streaming layout presentation quality picker */}
               <div>
-                <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 mb-2 flex items-center gap-1.5">Stream Quality</p>
+                <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 mb-2 flex items-center gap-1.5">
+                  Stream Quality
+                </p>
                 <div className="space-y-0.5">
-                  {qualities.map(q => (
+                  {qualities.map((q) => (
                     <button
                       key={q}
                       onClick={() => setQuality(q)}
@@ -96,6 +109,7 @@ const VideoControls = ({ videoRef }) => {
         </AnimatePresence>
       </div>
 
+      {/* Screen sizing window configuration expand toggle switch */}
       <button
         onClick={toggleFullscreen}
         className="p-3 bg-black/60 backdrop-blur-md text-white rounded-xl hover:bg-black/80 transition-all duration-200 active:scale-90 shadow-lg border border-white/5"

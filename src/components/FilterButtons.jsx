@@ -9,6 +9,7 @@ const FilterButtons = ({ activeCategory, onCategoryChange }) => {
       <div className="flex gap-2.5 pb-1">
         {categories.map((category) => {
           const isSelected = activeCategory === category;
+          
           return (
             <button
               key={category}
@@ -19,6 +20,7 @@ const FilterButtons = ({ activeCategory, onCategoryChange }) => {
                   : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-transparent hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-[var(--text-primary)]'
               }`}
             >
+              {/* Sliding background pill for the active tab */}
               {isSelected && (
                 <motion.div
                   layoutId="activeCategoryPill"
@@ -26,6 +28,7 @@ const FilterButtons = ({ activeCategory, onCategoryChange }) => {
                   transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                 />
               )}
+              
               <span className="relative z-10">{category}</span>
             </button>
           );
